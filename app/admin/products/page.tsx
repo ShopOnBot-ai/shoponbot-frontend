@@ -97,6 +97,7 @@ const Products = () => {
     }
 
     const handleDeleteProduct = async(id: number) => {
+        console.log("calling")
         try {
             setIsActionLoading(true)
             const response = await deleteProduct(id)
@@ -236,8 +237,7 @@ const Products = () => {
                                    size='icon' 
                                    className='h-8 w-8 cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 ml-auto'
                                    onClick={() => {
-                                    console.log("clcked")
-                                    openDialog(product.id, "Delete-product")}
+                                    openDialog(product.id, "Delete-product", product)}
                                    }
                                 >
                                     <Trash2 className='h-4 w-4' />

@@ -10,8 +10,8 @@ export interface Product {
 }
 
 export interface ProductsResponse {
-  message: string
-  products: Product[]
+    message: string
+    products: Product[]
 }
 
 export interface CreateProductPayload {
@@ -45,4 +45,25 @@ export interface DeleteProductResponse {
 export interface ProductImageResponse {
     message: string
     image_url: string
+}
+
+
+export interface PublicProducts {
+    id: number,
+    title: string,
+    description: string | null,
+    image_url: string | null,
+    price: number,
+    in_stock: boolean,
+    created_at: string
+}
+
+
+export interface PublicProductsResponsePayload {
+    message: string,
+    products: PublicProducts[],
+    page: number,
+    limit: number,
+    search: string | null,
+    hasMore: boolean
 }
