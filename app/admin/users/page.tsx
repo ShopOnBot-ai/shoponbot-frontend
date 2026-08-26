@@ -25,7 +25,7 @@ const UsersTable = () => {
 
     const debouncedSearchQuery = useDebounce(search, 500)
     const LIMIT = 10
-    const { currentPage, goToNextPage, goToPreviousPage, totalPages, resetPage } = usePagination({ totalCount: total_count, limit: LIMIT })
+    const { currentPage, goToNextPage, goToPreviousPage, totalPages, resetPage } = usePagination({ totalCount: total_count, initialLimit: LIMIT })
     const { isOpen, actionType, closeDialog, openDialog, selectedId, setIsOpen, setIsActionLoading, isActionLoading } = useDialog()
 
     const fetchAllUsers = async () => {

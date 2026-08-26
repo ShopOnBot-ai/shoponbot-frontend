@@ -34,9 +34,11 @@ export const activateUser = async(id: number): Promise<UserActionResponse> => {
     return response.data
 }
 
-export const getAdminProducts = async(search?: string): Promise<ProductsResponse> => {
+export const getAdminProducts = async(page: number, limit: number, search?: string): Promise<ProductsResponse> => {
     const response = await apiClient.get<ProductsResponse>(url.getAdminProducts, {
         params: {
+            page,
+            limit,
             ...(search ? { search }: {})
         }
     })

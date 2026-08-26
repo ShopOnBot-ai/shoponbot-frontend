@@ -12,6 +12,9 @@ export interface Product {
 export interface ProductsResponse {
     message: string
     products: Product[]
+    page: number
+    limit: number
+    total_count: number
 }
 
 export interface CreateProductPayload {

@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Field, FieldGroup } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useDialog } from '@/hooks/useModal'
+import { usePagination } from '@/hooks/usePagination'
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks'
 import { clearProducts, removeProduct, setErrors, setProducts, setProductsLoading } from '@/lib/store/slices/productsSlice'
 import { addProduct, deleteProduct, getAdminProducts, productImage, updateProduct } from '@/services/admin.service'
@@ -18,9 +21,10 @@ import { Edit2, Eye, Package, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 
+
 const Products = () => {
     const dispatch = useAppDispatch()
-    const { products, isLoading, error } = useAppSelector((state) => state.products)
+    const { products, isLoading, error, total_count } = useAppSelector((state) => state.products)
     console.log(products, "products..")
     const [form, setForm] = useState({
         title: "",
@@ -32,7 +36,21 @@ const Products = () => {
     })
     const [imagePreview, setImagePreview] = useState("")
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [search, setSearch] = useState<string>("")
     const { isOpen, setIsOpen, actionType, setIsActionLoading, isActionLoading, closeDialog, openDialog, selectedProduct, setSelectedProduct } = useDialog()
+    const debouncedSearchQuery = useDebounce(search, 500)
+    const { currentPage, resetPage, goToNextPage, goToPreviousPage, totalPages, hasNextPage, hasPrevPage, limit, changeLimit } = usePagination({ totalCount: total_count, initialLimit: 10 })
+
+    const loadProducts = async () => {
+        dispatch(setProductsLoading())
+        try {
+            const response = await getAdminProducts(currentPage, limit, debouncedSearchQuery)
+            dispatch(setProducts(response))
+        } catch (error) {
+            console.error(error)
+            dispatch(setErrors("Failed to fetch products"))
+        }
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -40,6 +58,11 @@ const Products = () => {
             ...prev,
             [name]: value
         }))
+    }
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearch(e.target.value)
+        resetPage()
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +91,7 @@ const Products = () => {
                     in_stock: form.in_stock,
                     stock_quantity: form.stock_quantity
                 })
-                toast.add({ type: "success", description: updateData.message})
+                toast.add({ type: "success", description: updateData.message })
                 closeDialog()
             } else {
                 const data = await addProduct({
@@ -82,7 +105,7 @@ const Products = () => {
                 toast.add({ type: "success", description: data.message })
                 closeDialog()
             }
-            const productsResponse = await getAdminProducts()
+            const productsResponse = await getAdminProducts(currentPage, limit, debouncedSearchQuery)
             dispatch(setProducts(productsResponse))
         } catch (error) {
             toast.add({
@@ -96,35 +119,25 @@ const Products = () => {
         }
     }
 
-    const handleDeleteProduct = async(id: number) => {
+    const handleDeleteProduct = async (id: number) => {
         console.log("calling")
         try {
             setIsActionLoading(true)
             const response = await deleteProduct(id)
             dispatch(removeProduct(id))
-            toast.add({type: "success", description: response.message})
+            toast.add({ type: "success", description: response.message })
             closeDialog()
         } catch (error) {
             console.log(error, "error")
-            toast.add({type: "warning", description: "Failed to delete this product"})
-        }finally {
+            toast.add({ type: "warning", description: "Failed to delete this product" })
+        } finally {
             setIsActionLoading(false)
         }
     }
 
     useEffect(() => {
-        const loadProducts = async () => {
-            dispatch(setProductsLoading())
-            try {
-                const response = await getAdminProducts()
-                dispatch(setProducts(response))
-            } catch (error) {
-                console.error(error)
-                dispatch(setErrors("Failed to fetch products"))
-            }
-        }
         loadProducts()
-    }, [dispatch])
+    }, [currentPage, limit, debouncedSearchQuery])
 
     useEffect(() => {
         if (!selectedProduct) return;
@@ -147,6 +160,8 @@ const Products = () => {
                 <Input
                     className='w-[50%]'
                     placeholder='Search Products...'
+                    value={search}
+                    onChange={handleSearchChange}
                 />
                 <Button className="cursor-pointer" onClick={() => openDialog(null, "Add-product")}>Add Product</Button>
             </div>
@@ -178,74 +193,127 @@ const Products = () => {
             ) : products.length === 0 ? (
                 <p className='flex item-center justify-center min-h-screen font-semibold text-2xl'>No products found...!</p>
             ) : (
-                <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-                    {products.map((product) => (
-                        <Card
-                            key={product.id}
-                            className='group overflow-hidden flex flex-col justify-between min-h-[320px] transition-all hover:shadow-md'
-                        >
-                            <CardHeader className='p-4 pb-0 relative'>
-                                {/* Image Placeholder */}
-                                <div className='aspect-video w-full rounded-lg bg-muted flex items-center justify-center text-muted-foreground relative overflow-hidden mb-2'>
-                                    {product.image_url ? (
-                                    <Image
-                                        src={product.image_url}
-                                        alt={product.title}
-                                        fill
-                                        className="object-cover transition-transform group-hover:scale-105"
-                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                        <Package className="h-8 w-8 stroke-1 transition-transform group-hover:scale-110" />
+                <>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+                        {products.map((product) => (
+                            <Card
+                                key={product.id}
+                                className='group overflow-hidden flex flex-col justify-between min-h-[320px] transition-all hover:shadow-md'
+                            >
+                                <CardHeader className='p-4 pb-0 relative'>
+                                    {/* Image Placeholder */}
+                                    <div className='aspect-video w-full rounded-lg bg-muted flex items-center justify-center text-muted-foreground relative overflow-hidden mb-2'>
+                                        {product.image_url ? (
+                                            <Image
+                                                src={product.image_url}
+                                                alt={product.title}
+                                                fill
+                                                className="object-cover transition-transform group-hover:scale-105"
+                                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                <Package className="h-8 w-8 stroke-1 transition-transform group-hover:scale-110" />
+                                            </div>
+                                        )}
+                                        <span className={`absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full ${product.in_stock ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'
+                                            }`}>
+                                            {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                                        </span>
                                     </div>
-                                )}
-                                    <span className={`absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full ${product.in_stock ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' : 'bg-destructive/10 text-destructive'
-                                        }`}>
-                                        {product.in_stock ? 'In Stock' : 'Out of Stock'}
-                                    </span>
-                                </div>
-                                {/* <span className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>{product.category}</span> */}
-                                <CardTitle className='font-semibold text-base tracking-tight leading-tight line-clamp-1 mt-1'>
-                                    {product.title}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className='px-4 flex-1'>
-                                <p className='text-sm text-zinc-500 tracking-tight text-primary'>{product.description}</p>
-                            </CardContent>
-                            <CardContent className='p-4 pt-1 flex-1'>
-                                <p className='text-lg font-bold tracking-tight text-primary'>₹ {product.price}</p>
-                            </CardContent>
+                                    {/* <span className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>{product.category}</span> */}
+                                    <CardTitle className='font-semibold text-base tracking-tight leading-tight line-clamp-1 mt-1'>
+                                        {product.title}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className='px-4 flex-1'>
+                                    <p className='text-sm text-zinc-500 tracking-tight text-primary'>{product.description}</p>
+                                </CardContent>
+                                <CardContent className='p-4 pt-1 flex-1'>
+                                    <p className='text-lg font-bold tracking-tight text-primary'>₹ {product.price}</p>
+                                </CardContent>
 
-                            {/* Hover Quick Actions inside CardFooter */}
-                            <CardFooter className='p-4 pt-3 border-t bg-muted/20 flex items-center gap-2'>
-                                <Button variant='outline' size='icon' className='h-8 w-8 cursor-pointer'>
-                                    <Eye className='h-4 w-4 text-muted-foreground' />
-                                </Button>
-                                <Button
-                                    variant='outline'
-                                    size='icon'
-                                    className='h-8 w-8 cursor-pointer'
-                                    onClick={() => {
-                                        openDialog(product.id, "Edit-product", product)
-                                    }}
-                                >
-                                    <Edit2 className='h-4 w-4 text-muted-foreground' />
-                                </Button>
-                                <Button 
-                                   variant='outline' 
-                                   size='icon' 
-                                   className='h-8 w-8 cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 ml-auto'
-                                   onClick={() => {
-                                    openDialog(product.id, "Delete-product", product)}
-                                   }
-                                >
-                                    <Trash2 className='h-4 w-4' />
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
-                </div>
+                                {/* Hover Quick Actions inside CardFooter */}
+                                <CardFooter className='p-4 pt-3 border-t bg-muted/20 flex items-center gap-2'>
+                                    <Button variant='outline' size='icon' className='h-8 w-8 cursor-pointer'>
+                                        <Eye className='h-4 w-4 text-muted-foreground' />
+                                    </Button>
+                                    <Button
+                                        variant='outline'
+                                        size='icon'
+                                        className='h-8 w-8 cursor-pointer'
+                                        onClick={() => {
+                                            openDialog(product.id, "Edit-product", product)
+                                        }}
+                                    >
+                                        <Edit2 className='h-4 w-4 text-muted-foreground' />
+                                    </Button>
+                                    <Button
+                                        variant='outline'
+                                        size='icon'
+                                        className='h-8 w-8 cursor-pointer hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 ml-auto'
+                                        onClick={() => {
+                                            openDialog(product.id, "Delete-product", product)
+                                        }
+                                        }
+                                    >
+                                        <Trash2 className='h-4 w-4' />
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-4">
+                        <Field orientation="horizontal" className="w-fit">
+                            <FieldLabel htmlFor="select-rows-per-page">Rows per page</FieldLabel>
+                            <Select value={String(limit)} onValueChange={(value) => changeLimit(Number(value))}>
+                                <SelectTrigger className="w-20" id="select-rows-per-page">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent align="start">
+                                    <SelectGroup>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="25">25</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                        <SelectItem value="100">100</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        <Pagination className="mx-0 w-auto">
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        onClick={goToPreviousPage}
+                                        aria-disabled={!hasPrevPage}
+                                        className={
+                                            !hasPrevPage
+                                                ? "pointer-events-none opacity-50"
+                                                : "cursor-pointer"
+                                        }
+                                    />
+                                </PaginationItem>
+                                <PaginationItem>
+                                    <span className="px-3 text-sm text-muted-foreground">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                </PaginationItem>
+                                <PaginationItem>
+                                    <PaginationNext
+                                        onClick={goToNextPage}
+                                        aria-disabled={!hasNextPage}
+                                        className={
+                                            !hasNextPage
+                                                ? "pointer-events-none opacity-50"
+                                                : "cursor-pointer"
+                                        }
+                                    />
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
+                    </div>
+                </>
             )}
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="max-w-md rounded-xl bg-background border shadow-xl">
@@ -376,7 +444,7 @@ const Products = () => {
                                 </Button>
                             </DialogFooter>
                         </form>
-                    ): (
+                    ) : (
                         <>
                             <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
                                 Are you absolutely sure you want to delete this product?
@@ -400,7 +468,7 @@ const Products = () => {
                                     disabled={isActionLoading}
                                     className="cursor-pointer"
                                     onClick={() => {
-                                        if(!selectedProduct?.id) return;
+                                        if (!selectedProduct?.id) return;
                                         handleDeleteProduct(selectedProduct?.id)
                                     }}
                                 >

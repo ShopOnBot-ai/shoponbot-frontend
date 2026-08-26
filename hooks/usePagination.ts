@@ -3,15 +3,16 @@ import { useState } from "react";
 interface UsePaginationProps {
   totalCount: number;
   initialPage?: number;
-  limit?: number;
+  initialLimit?: number;
 }
 
 export const usePagination = ({
   totalCount,
   initialPage = 1,
-  limit = 10,
+  initialLimit = 10,
 }: UsePaginationProps) => {
     const [currentPage, setCurrentPage] = useState<number>(initialPage);
+    const [limit, setLimit] = useState<number>(initialLimit)
 
     const totalPages = Math.ceil(totalCount / limit) || 1;
 
@@ -34,6 +35,11 @@ export const usePagination = ({
         setCurrentPage(1);
     };
 
+    const changeLimit = (newLimit: number) => {
+        setLimit(newLimit);
+        setCurrentPage(1)
+    }
+
     return {
         currentPage,
         totalPages,
@@ -43,5 +49,7 @@ export const usePagination = ({
         goToPreviousPage,
         setCurrentPage,
         resetPage,
+        changeLimit,
+        limit
     };
 };
