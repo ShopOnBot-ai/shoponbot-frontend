@@ -3,6 +3,7 @@ import authReducer from "./slices/authSlice";
 import getUsersReducer from "./slices/usersSlice";
 import productsReducer from "./slices/productsSlice";
 import publicProductsReducer from "./slices/publicProductsSlice";
+import cartReducer from "./slices/cartSlice"
 
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
         getUsers: getUsersReducer,
         products: productsReducer,
         publicProducts: publicProductsReducer,
+        cart: cartReducer,
     }
 })
 export type RootState = ReturnType<typeof store.getState>

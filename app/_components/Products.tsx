@@ -17,14 +17,18 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Bot, Send, Sparkles, User } from "lucide-react";
+import { useRouter } from "next/navigation"
+import { createCart } from "@/services/cart.service"
+import { setCart } from "@/lib/store/slices/cartSlice"
 
 const LIMIT = 10
 
 export const Products = () => {
-    const dispatch = useDispatch()
-    const { isLoading, products, page, hasMore } = useAppSelector((state) => state.publicProducts)
-    const [search, setSearch] = useState<string>("")
-    const debouncedSearchQuery = useDebounce(search, 500)
+    const dispatch = useDispatch();
+    const router = useRouter();
+    const { isLoading, products, page, hasMore } = useAppSelector((state) => state.publicProducts);
+    const [search, setSearch] = useState<string>("");
+    const debouncedSearchQuery = useDebounce(search, 500);
     const [messages, setMessages] = React.useState([
         {
             id: "welcome",
@@ -33,12 +37,6 @@ export const Products = () => {
             timestamp: new Date(),
         },
     ])
-
-    console.log({
-        hasMore,
-        page,
-        products: products.length
-    })
 
     const fetchAllproducts = useCallback(async () => {
         try {
@@ -70,6 +68,20 @@ export const Products = () => {
     useEffect(() => {
         fetchAllproducts()
     }, [fetchAllproducts])
+
+    const handleAddToCart = async (pid: number, quantity: number = 3) => {
+        const payload = {
+            product_id: pid,
+            quantity: quantity
+        }
+        try {
+            const cartResponse = await createCart(payload)
+            console.log(cartResponse, "Cart Response")
+            dispatch(setCart(cartResponse))
+        } catch (error) {
+            console.log("Failed to add items to the cart")
+        }
+    }
 
     return (
         <>
@@ -134,7 +146,11 @@ export const Products = () => {
                                     <span className="text-xl font-bold text-foreground">
                                         ₹ {product.price}
                                     </span>
-                                    <Button className="w-28 font-medium cursor-pointer" disabled={!product.in_stock}>
+                                    <Button 
+                                        className="w-28 font-medium cursor-pointer" 
+                                        disabled={!product.in_stock} 
+                                        onClick={() => handleAddToCart(product.id)}
+                                    >
                                         {product.in_stock ? "Add to Cart" : "Unavailbale"}
                                     </Button>
                                 </CardFooter>
@@ -211,8 +227,8 @@ export const Products = () => {
 
                                                         <div
                                                             className={`rounded-2xl px-3.5 py-2.5 text-sm shadow-sm leading-relaxed ${isAssistant
-                                                                    ? "bg-muted/60 text-foreground rounded-tl-none"
-                                                                    : "bg-primary text-primary-foreground rounded-tr-none"
+                                                                ? "bg-muted/60 text-foreground rounded-tl-none"
+                                                                : "bg-primary text-primary-foreground rounded-tr-none"
                                                                 }`}
                                                         >
                                                             <p className="whitespace-pre-wrap">{msg.text}</p>

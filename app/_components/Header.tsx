@@ -19,7 +19,8 @@ export const Header = () => {
     const router = useRouter()
     const dispatch = useAppDispatch()
     const { user, isAuthenticated, isInitialized, isLoading } = useAppSelector((state) => state.auth)
-
+    const { cart } = useAppSelector((state) => state.cart)
+    const total_cart_count = cart?.items.reduce((total, item) => total + item.quantity, 0) || 0
     const handleLogout = async() => {
         try {
             const response = await logout()
@@ -81,7 +82,7 @@ export const Header = () => {
                     >
                         <ShoppingCart className="size-5" />
                         <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-                        0
+                        {total_cart_count}
                         </span>
                     </Link>
                     )}
@@ -105,7 +106,7 @@ export const Header = () => {
                                     </Avatar>
 
                                     <span className="hidden max-w-24 truncate text-sm font-medium sm:block">
-                                        {user?.full_name ?? "Profile"}
+                                        {user?.full_name ?? "Guest"}
                                     </span>
                                 </Button>
                             }
