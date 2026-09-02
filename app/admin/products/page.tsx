@@ -17,6 +17,7 @@ import { usePagination } from '@/hooks/usePagination'
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks'
 import { clearProducts, removeProduct, setErrors, setProducts, setProductsLoading } from '@/lib/store/slices/productsSlice'
 import { addProduct, deleteProduct, getAdminProducts, productImage, updateProduct } from '@/services/admin.service'
+import { Product } from '@/types/products'
 import { Edit2, Eye, Package, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
@@ -37,7 +38,7 @@ const Products = () => {
     const [imagePreview, setImagePreview] = useState("")
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [search, setSearch] = useState<string>("")
-    const { isOpen, setIsOpen, actionType, setIsActionLoading, isActionLoading, closeDialog, openDialog, selectedProduct, setSelectedProduct } = useDialog()
+    const { isOpen, setIsOpen, actionType, setIsActionLoading, isActionLoading, closeDialog, openDialog, selectedData, setSelectedData } = useDialog<string, Product>()
     const debouncedSearchQuery = useDebounce(search, 500)
     const { currentPage, resetPage, goToNextPage, goToPreviousPage, totalPages, hasNextPage, hasPrevPage, limit, changeLimit } = usePagination({ totalCount: total_count, initialLimit: 10 })
 
@@ -82,8 +83,8 @@ const Products = () => {
                 image_url = imageResponse?.image_url ?? null
             }
             if (actionType === "Edit-product") {
-                if (!selectedProduct) return;
-                const updateData = await updateProduct(selectedProduct?.id, {
+                if (!selectedData) return;
+                const updateData = await updateProduct(selectedData.id, {
                     title: form.title,
                     description: form.description,
                     image_url,
@@ -140,17 +141,17 @@ const Products = () => {
     }, [currentPage, limit, debouncedSearchQuery])
 
     useEffect(() => {
-        if (!selectedProduct) return;
+        if (!selectedData) return;
 
         setForm({
-            title: selectedProduct.title,
-            description: selectedProduct.description ?? "",
-            image_url: selectedProduct.image_url ?? "",
-            price: selectedProduct.price,
-            in_stock: selectedProduct.in_stock,
-            stock_quantity: selectedProduct.stock_quantity
+            title: selectedData.title,
+            description: selectedData.description ?? "",
+            image_url: selectedData.image_url ?? "",
+            price: selectedData.price,
+            in_stock: selectedData.in_stock,
+            stock_quantity: selectedData.stock_quantity
         })
-    }, [selectedProduct])
+    }, [selectedData])
 
 
 
@@ -468,8 +469,8 @@ const Products = () => {
                                     disabled={isActionLoading}
                                     className="cursor-pointer"
                                     onClick={() => {
-                                        if (!selectedProduct?.id) return;
-                                        handleDeleteProduct(selectedProduct?.id)
+                                        if (!selectedData?.id) return;
+                                        handleDeleteProduct(selectedData?.id)
                                     }}
                                 >
                                     {isActionLoading ? "Deleting..." : "Delete"}

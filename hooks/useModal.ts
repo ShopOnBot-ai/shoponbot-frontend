@@ -1,18 +1,18 @@
 import { Product } from "@/types/products";
 import { useState } from "react";
 
-export const useDialog = <T extends string = string>() => {
+export const useDialog = <TAction extends string = string, TData = null>() => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>()
-  const [actionType, setActionType] = useState<T | null>(null);
+  const [selectedData, setSelectedData] = useState<TData | null>()
+  const [actionType, setActionType] = useState<TAction | null>(null);
   const [isActionLoading, setIsActionLoading] = useState<boolean>(false);
 
-  const openDialog = (id: number | null, type: T, product: Product | null = null) => {
+  const openDialog = (id: number | null, type: TAction, data: TData | null = null) => {
     setSelectedId(id);
     setActionType(type);
     setIsOpen(true);
-    setSelectedProduct(product)
+    setSelectedData(data)
   };
 
   const closeDialog = () => {
@@ -31,7 +31,7 @@ export const useDialog = <T extends string = string>() => {
     setIsActionLoading,
     openDialog,
     closeDialog,
-    selectedProduct,
-    setSelectedProduct
+    selectedData,
+    setSelectedData
   };
 };

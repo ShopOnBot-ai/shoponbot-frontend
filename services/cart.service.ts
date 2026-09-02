@@ -1,8 +1,10 @@
 import { apiClient } from "@/lib/api/axios"
-import { CartResponse, CreateCartPayload } from "@/types/cart"
+import { CartResponse, CreateCartPayload, updateQuantityPayload } from "@/types/cart"
 
 const url = {
-    cart: "/cart"
+    cart: "/cart",
+    updateQuantity: (id: number) => `/${id}`,
+    removeItem: (id: number) => `/${id}`,
 }
 
 export const createCart = async(payload: CreateCartPayload): Promise<CartResponse> => {
@@ -12,5 +14,15 @@ export const createCart = async(payload: CreateCartPayload): Promise<CartRespons
 
 export const getCart = async() => {
     const response = await apiClient.get(url.cart)
+    return response.data
+}
+
+export const updateQuantity = async(cartitemId: number, payload: updateQuantityPayload): Promise<CartResponse> => {
+    const response = await apiClient.patch<CartResponse>(url.updateQuantity(cartitemId), payload);
+    return response.data
+}
+
+export const removeItemfromCart = async(cartitemId: number): Promise<CartResponse> => {
+    const response = await apiClient.delete<CartResponse>(url.removeItem(cartitemId));
     return response.data
 }

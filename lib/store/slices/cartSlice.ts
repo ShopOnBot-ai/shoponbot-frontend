@@ -22,20 +22,21 @@ const CartSlice = createSlice({
             state.isLoading = false
             state.error = null
         },
-        incrementQuantity(state, action) {
-
+        setCartLoading(state, action) {
+            state.isLoading = true
+            state.error = null
         },
-        decrementQuantity(state, action) {
-
-        },
-        removeCart(state, action) {
-
+        setCartError(state, action: PayloadAction<string>) {
+            state.isLoading = false
+            state.error = action.payload
         },
         clearCart(state, action) {
-            
+            state.cart = null
+            state.isLoading = false
+            state.error = null
         },
     }
 })
 
-export const { setCart } = CartSlice.actions;
+export const { setCart, setCartLoading, setCartError, clearCart } = CartSlice.actions;
 export default CartSlice.reducer;

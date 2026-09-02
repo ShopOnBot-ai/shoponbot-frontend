@@ -25,3 +25,7 @@ export interface CartResponse {
   created_at: string;
   updated_at: string;
 }
+
+export interface updateQuantityPayload {
+  quantity: number
+}
