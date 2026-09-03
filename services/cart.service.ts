@@ -3,8 +3,8 @@ import { CartResponse, CreateCartPayload, updateQuantityPayload } from "@/types/
 
 const url = {
     cart: "/cart",
-    updateQuantity: (id: number) => `/${id}`,
-    removeItem: (id: number) => `/${id}`,
+    updateQuantity: (id: number) => `/cart/${id}`,
+    removeItem: (id: number) => `/cart/${id}`,
 }
 
 export const createCart = async(payload: CreateCartPayload): Promise<CartResponse> => {
