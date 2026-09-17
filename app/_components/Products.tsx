@@ -22,6 +22,7 @@ export const Products = () => {
     const dispatch = useDispatch();
     const router = useRouter();
     const { isLoading, products, page, hasMore } = useAppSelector((state) => state.publicProducts);
+    const { isAuthenticated } = useAppSelector(state => state.auth)
     const [search, setSearch] = useState<string>("");
     const debouncedSearchQuery = useDebounce(search, 500);
 
@@ -56,7 +57,11 @@ export const Products = () => {
         fetchAllproducts()
     }, [fetchAllproducts])
 
-    const handleAddToCart = async (pid: number, quantity: number = 3) => {
+    const handleAddToCart = async (pid: number, quantity: number = 1) => {
+        if (!isAuthenticated) {
+            router.push("/login"); 
+            return null
+        }
         const payload = {
             product_id: pid,
             quantity: quantity
