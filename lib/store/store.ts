@@ -4,6 +4,9 @@ import getUsersReducer from "./slices/usersSlice";
 import productsReducer from "./slices/productsSlice";
 import publicProductsReducer from "./slices/publicProductsSlice";
 import cartReducer from "./slices/cartSlice"
+import getAdminOrdersReducer from "./slices/adminOrdersSlice"
+import getProfileReducer from "./slices/profileSlice"
+import checkoutReducer from "./slices/checkoutSlice"
 
 
 export const store = configureStore({
@@ -13,6 +16,9 @@ export const store = configureStore({
         products: productsReducer,
         publicProducts: publicProductsReducer,
         cart: cartReducer,
+        getAdminOrders: getAdminOrdersReducer,
+        profile: getProfileReducer,
+        checkout: checkoutReducer
     }
 })
 export type RootState = ReturnType<typeof store.getState>

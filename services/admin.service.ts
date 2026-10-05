@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api/axios"
 import { UserActionResponse, UserResponsePayload } from "@/types/user"
 import { CreateProductPayload, DeleteProductResponse, ProductImageResponse, ProductsResponse, UpdatedProductResponse, UpdateProductPayload } from "@/types/products"
+import { AdminOrdersResponse, Order } from "@/types/orders"
 
 const url = {
     getUsers: "/admin/users",
@@ -10,7 +11,12 @@ const url = {
     addProduct: "/admin/add_product",
     updateProduct: (id: number) => `/admin/products/${id}`,
     deleteProduct: (id: number) => `/admin/products/${id}`,
-    uploadProductImage: "/uploads/product-image"
+    uploadProductImage: "/uploads/product-image",
+    getOrders: "/admin/orders",
+    acceptOrder: (orderId: number) => `/admin/orders/${orderId}/accept`,
+    rejectOrder: (orderId: number) => `/admin/orders/${orderId}/reject`,
+    shippedOrder: (orderId: number) => `/admin/orders/${orderId}/ship`,
+    deliveredtOrder: (orderId: number) => `/admin/orders/${orderId}/deliver`
 }
 
 export const getUsers = async(page: number, limit: number, search?: string ): Promise<UserResponsePayload> => {
@@ -68,5 +74,33 @@ export const productImage = async(file: File | null): Promise<ProductImageRespon
     return response.data
 }
 
-// TODO: 
-// 3. delete product
+export const getOrders = async(page: number, limit: number, search: string | null = null): Promise<AdminOrdersResponse> => {
+    const response = await apiClient.get<AdminOrdersResponse>(url.getOrders, {
+        params: {
+            page,
+            limit,
+            ...(search ? {search} : {})
+        }
+    })
+    return response.data
+}
+
+export const acceptOrder = async(order_id: number): Promise<Order> => {
+    const response = await apiClient.patch<Order>(url.acceptOrder(order_id), {})
+    return response.data
+}
+
+export const rejectOrder = async(order_id: number): Promise<Order> => {
+    const response = await apiClient.patch<Order>(url.rejectOrder(order_id), {})
+    return response.data
+}
+
+export const shippedOrder = async(order_id: number): Promise<Order> => {
+    const response = await apiClient.patch<Order>(url.shippedOrder(order_id), {})
+    return response.data
+}
+
+export const deliveredOrder = async(order_id: number): Promise<Order> => {
+    const response = await apiClient.patch<Order>(url.deliveredtOrder(order_id), {})
+    return response.data
+}

@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    conatiner_name: frontend_app
+    port: 
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - WATCHPACK_POLLING=true 

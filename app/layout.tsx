@@ -6,6 +6,7 @@ import { StoreProvider } from "@/lib/store/provider";
 import { AuthInitializer } from "./_components/auth/AuthInitializer";
 import { OnboardingBanner } from "@/components/OnboardingBanner";
 import { Header } from "./_components/Header";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,6 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Toaster />
           </AuthInitializer>
         </StoreProvider>
+        <Script 
+          src="https://checkout.razorpay.com/v1/checkout.js" 
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );

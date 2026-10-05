@@ -26,10 +26,10 @@ export const Products = () => {
     const [search, setSearch] = useState<string>("");
     const debouncedSearchQuery = useDebounce(search, 500);
 
-    const fetchAllproducts = useCallback(async () => {
+    const fetchAllproducts = useCallback(async (signal: AbortSignal) => {
         try {
             dispatch(setProductsLoading())
-            const response = await getAllProducts(1, LIMIT, debouncedSearchQuery)
+            const response = await getAllProducts(1, LIMIT, debouncedSearchQuery, signal)
             dispatch(setInitialProducts(response))
         } catch (error) {
             console.log("Failed to fecth products", error)
@@ -54,7 +54,9 @@ export const Products = () => {
     const { observerRef } = useInfiniteScroll({ onLoadMore: loadMoreProducts })
 
     useEffect(() => {
-        fetchAllproducts()
+        const controller = new AbortController();
+        fetchAllproducts(controller.signal)
+        return () => controller.abort()
     }, [fetchAllproducts])
 
     const handleAddToCart = async (pid: number, quantity: number = 1) => {

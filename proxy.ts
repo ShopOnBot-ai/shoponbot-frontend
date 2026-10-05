@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const middleware = async(request: NextRequest) => {
+export default async function proxy (request: NextRequest) {
     const token = request.cookies.get("access_token")
     const refreshToken = request.cookies.get("refresh_token")
-    console.log(token, "token")
     if(token || refreshToken){
         return NextResponse.next()
     }
@@ -13,5 +12,5 @@ export const middleware = async(request: NextRequest) => {
 }
 
 export const config = {
-    matcher: "/admin/:path*"
+    matcher: ["/admin/:path*", "/onboarding","/cart", "/checkout"]
 }
